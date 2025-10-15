@@ -115,12 +115,12 @@ INSERT INTO platforms (id, label, ordering, enabled) VALUES
 -- Insert platform parameters
 -- Replit parameters
 INSERT INTO platform_params (platform_id, key, label, type, help, options, required, advanced) VALUES
-  ('replit', 'backend', 'Backend Framework', 'select', 'Choose your backend framework', 
+  ('replit', 'backend', 'Backend Framework', 'select', 'Choose your backend framework',
    '{"options": ["Node/Express", "FastAPI", "Flask"]}', true, false),
   ('replit', 'persistence', 'Persistence Layer', 'select', 'Choose your database solution',
    '{"options": ["Replit DB", "Supabase", "SQLite (dev)"]}', true, false),
-  ('replit', 'deployment', 'Deployment Options', 'text', 'Deployment configuration (Replit Nix + secrets)', '', false, true),
-  ('replit', 'template', 'Replit Template', 'text', 'Official template to use', '', false, true);
+  ('replit', 'deployment', 'Deployment Options', 'text', 'Deployment configuration (Replit Nix + secrets)', NULL, false, true),
+  ('replit', 'template', 'Replit Template', 'text', 'Official template to use', NULL, false, true);
 
 -- Bolt.new parameters
 INSERT INTO platform_params (platform_id, key, label, type, help, options, required, advanced) VALUES
@@ -128,7 +128,7 @@ INSERT INTO platform_params (platform_id, key, label, type, help, options, requi
    '{"options": ["Next.js", "Remix"]}', true, false),
   ('bolt', 'auth_source', 'Authentication', 'select', 'Choose authentication provider',
    '{"options": ["Supabase", "Clerk"]}', true, false),
-  ('bolt', 'hosting', 'Hosting Assumptions', 'textarea', 'Hosting configuration and secret management', '', false, true);
+  ('bolt', 'hosting', 'Hosting Assumptions', 'textarea', 'Hosting configuration and secret management', NULL, false, true);
 
 -- Leap.new parameters
 INSERT INTO platform_params (platform_id, key, label, type, help, options, required, advanced) VALUES
@@ -136,17 +136,17 @@ INSERT INTO platform_params (platform_id, key, label, type, help, options, requi
    '{"options": ["Claude", "OpenAI", "Custom"]}', true, false),
   ('leap', 'mcp_connectors', 'MCP Connectors', 'multiselect', 'Select Model Context Protocol connectors',
    '{"options": ["Filesystem", "GitHub", "Google Drive", "Notion", "Slack"]}', true, false),
-  ('leap', 'tools_apis', 'Tools & APIs', 'textarea', 'Additional tools: vector DB, embeddings, validators', '', false, true),
-  ('leap', 'guardrails', 'Guardrails', 'textarea', 'Safety measures: PII redaction, prompt-budget, eval hooks', '', false, true);
+  ('leap', 'tools_apis', 'Tools & APIs', 'textarea', 'Additional tools: vector DB, embeddings, validators', NULL, false, true),
+  ('leap', 'guardrails', 'Guardrails', 'textarea', 'Safety measures: PII redaction, prompt-budget, eval hooks', NULL, false, true);
 
 -- Lovable parameters
 INSERT INTO platform_params (platform_id, key, label, type, help, options, required, advanced) VALUES
   ('lovable', 'project_type', 'Project Type', 'select', 'Type of project to build',
    '{"options": ["Web app", "Mobile", "Landing + backend"]}', true, false),
-  ('lovable', 'source_control', 'Source Control', 'textarea', 'GitHub repo settings and configuration', '', false, true),
+  ('lovable', 'source_control', 'Source Control', 'textarea', 'GitHub repo settings and configuration', NULL, false, true),
   ('lovable', 'integrations', 'Integrations', 'multiselect', 'Built-in integrations',
    '{"options": ["Supabase", "Stripe", "Upload service"]}', false, false),
-  ('lovable', 'collaboration', 'Collaboration', 'textarea', 'PR flow assumptions and team settings', '', false, true);
+  ('lovable', 'collaboration', 'Collaboration', 'textarea', 'PR flow assumptions and team settings', NULL, false, true);
 
 -- Enable Row Level Security
 ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;

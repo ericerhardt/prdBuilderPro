@@ -1,7 +1,12 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { buildPRDPrompt, extractProductName } from '@/lib/prd/prompt-builder'
 import { z } from 'zod'
+import OpenAI from 'openai'
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
 
 const generateRequestSchema = z.object({
   platform: z.string(),
@@ -19,7 +24,7 @@ const generateRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createServerSupabaseClient()
     
     // Verify user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -62,35 +67,23 @@ export async function POST(request: NextRequest) {
     )
 
     // Call OpenAI API to generate the PRD
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4-turbo-preview',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert product manager and technical architect. Generate comprehensive, actionable PRDs.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert product manager and technical architect. Generate comprehensive, actionable PRDs.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
     })
 
-    if (!openaiResponse.ok) {
-      throw new Error('Failed to generate PRD')
-    }
-
-    const openaiData = await openaiResponse.json()
-    const generatedContent = openaiData.choices[0].message.content
+    const generatedContent = completion.choices[0].message.content || ''
 
     // Extract product name from the generated content
     const productName = extractProductName(generatedContent)

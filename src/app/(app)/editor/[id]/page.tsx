@@ -155,13 +155,13 @@ export default function EditorPage({ params }: EditorPageProps) {
   const parseSections = (markdown: string): PRDSection[] => {
     const lines = markdown.split('\n')
     const sections: PRDSection[] = []
-    let currentSection: PRDSection | null = null
+    let currentSection: PRDSection | undefined
     let sectionContent: string[] = []
 
-    lines.forEach((line, index) => {
+    lines.forEach((line) => {
       const h2Match = line.match(/^##\s+(.+)/)
       const h1Match = line.match(/^#\s+(.+)/)
-      
+
       if (h2Match) {
         if (currentSection) {
           currentSection.content = sectionContent.join('\n').trim()

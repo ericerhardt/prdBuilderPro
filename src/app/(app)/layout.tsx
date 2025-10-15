@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { WorkspaceInitializer } from '@/components/workspace-initializer'
 
 export default async function AppLayout({
   children,
@@ -15,8 +16,19 @@ export default async function AppLayout({
     redirect('/login')
   }
 
+  // Check if user has admin access
+  const { data: workspaceMemberships } = await supabase
+    .from('workspace_members')
+    .select('role')
+    .eq('user_id', user.id)
+
+  const isAdmin = workspaceMemberships?.some(
+    (membership) => membership.role === 'owner' || membership.role === 'admin'
+  )
+
   return (
     <div className="min-h-screen flex flex-col">
+      <WorkspaceInitializer />
       {/* App Navigation */}
       <nav className="border-b">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -37,6 +49,11 @@ export default async function AppLayout({
               <Link href="/billing" className="text-sm font-medium hover:text-primary">
                 Billing
               </Link>
+              {isAdmin && (
+                <Link href="/admin/billing" className="text-sm font-medium hover:text-primary">
+                  Admin
+                </Link>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-4">

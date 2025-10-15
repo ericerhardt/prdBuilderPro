@@ -26,15 +26,32 @@ export default function LibraryPage() {
   const [prds, setPRDs] = useState<PRDDocument[]>([])
   const [filteredPRDs, setFilteredPRDs] = useState<PRDDocument[]>([])
   const [loading, setLoading] = useState(true)
+  const [workspaceLoading, setWorkspaceLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [platformFilter, setPlatformFilter] = useState('all')
   const supabase = createClient()
 
   useEffect(() => {
-    if (activeWorkspace) {
+    // Give the WorkspaceInitializer time to load the workspace
+    const timer = setTimeout(() => {
+      setWorkspaceLoading(false)
+      if (activeWorkspace) {
+        fetchPRDs()
+      } else {
+        setLoading(false)
+      }
+    }, 1000)
+
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!workspaceLoading && activeWorkspace) {
       fetchPRDs()
     }
-  }, [activeWorkspace])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkspace, workspaceLoading])
 
   useEffect(() => {
     filterPRDs()
@@ -98,6 +115,22 @@ export default function LibraryPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!activeWorkspace) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Workspace Found</h3>
+            <p className="text-muted-foreground text-center max-w-sm">
+              You need to be part of a workspace to access the library. Please contact your workspace administrator.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
