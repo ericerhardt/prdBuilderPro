@@ -45,8 +45,51 @@ export function WorkspaceInitializer() {
           return
         }
 
-        // Set the first workspace as active
-        if (memberships && memberships.length > 0) {
+        // If no workspaces exist, try to create one
+        if (!memberships || memberships.length === 0) {
+          console.log('No workspace found, attempting to create one...')
+
+          try {
+            const response = await fetch('/api/workspace/create', {
+              method: 'POST',
+            })
+
+            if (response.ok) {
+              const result = await response.json()
+              console.log('Created workspace:', result.workspace)
+
+              // Fetch workspaces again
+              const { data: newMemberships, error: refetchError } = await supabase
+                .from('workspace_members')
+                .select(`
+                  role,
+                  workspace:workspaces (
+                    id,
+                    name,
+                    created_at,
+                    created_by
+                  )
+                `)
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: true })
+
+              if (!refetchError && newMemberships && newMemberships.length > 0) {
+                const firstMembership = newMemberships[0]
+                const workspace = firstMembership.workspace as any
+
+                if (workspace) {
+                  console.log('Initializing newly created workspace:', workspace.name)
+                  setActiveWorkspace(workspace, firstMembership.role)
+                }
+              }
+            } else {
+              console.error('Failed to create workspace:', await response.text())
+            }
+          } catch (createError) {
+            console.error('Error creating workspace:', createError)
+          }
+        } else {
+          // Set the first workspace as active
           const firstMembership = memberships[0]
           const workspace = firstMembership.workspace as any
 
@@ -54,8 +97,6 @@ export function WorkspaceInitializer() {
             console.log('Initializing workspace:', workspace.name)
             setActiveWorkspace(workspace, firstMembership.role)
           }
-        } else {
-          console.warn('No workspaces found for user')
         }
       } catch (error) {
         console.error('Error initializing workspace:', error)

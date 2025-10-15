@@ -63,30 +63,8 @@ export default function SignupPage() {
           title: "Success!",
           description: "Please check your email to verify your account.",
         })
-        
-        // Create initial workspace for the user
-        if (data.user.id) {
-          const { data: workspace, error: workspaceError } = await supabase
-            .from('workspaces')
-            .insert({
-              name: 'My Workspace',
-              created_by: data.user.id,
-            })
-            .select()
-            .single()
-          
-          if (workspace && !workspaceError) {
-            // Add user as owner of workspace
-            await supabase
-              .from('workspace_members')
-              .insert({
-                workspace_id: workspace.id,
-                user_id: data.user.id,
-                role: 'owner',
-              })
-          }
-        }
-        
+
+        // Workspace will be created automatically on first login via auth callback
         router.push('/login')
       }
     } catch (error) {
