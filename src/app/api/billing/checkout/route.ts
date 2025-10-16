@@ -68,13 +68,13 @@ export async function POST(request: NextRequest) {
       stripeCustomerId = customer.id
       console.log('[Checkout] Stripe customer created:', stripeCustomerId)
 
-      // Get user's workspace
-      const { data: workspaceMember, error: workspaceError } = await supabase
+      // Get user's workspace (use first workspace if user owns multiple)
+      const { data: workspaceMembers, error: workspaceError } = await supabase
         .from('workspace_members')
-        .select('workspace_id')
+        .select('workspace_id, workspace:workspaces(name)')
         .eq('user_id', user.id)
         .eq('role', 'owner')
-        .single()
+        .order('created_at', { ascending: true })
 
       if (workspaceError) {
         console.error('[Checkout] Error fetching workspace:', workspaceError)
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         }, { status: 400 })
       }
 
-      if (!workspaceMember?.workspace_id) {
+      if (!workspaceMembers || workspaceMembers.length === 0) {
         console.error('[Checkout] No workspace found for user:', user.id)
         return NextResponse.json({
           error: 'Workspace not found',
@@ -93,7 +93,18 @@ export async function POST(request: NextRequest) {
         }, { status: 400 })
       }
 
-      console.log('[Checkout] User workspace found:', workspaceMember.workspace_id)
+      // Use the first workspace (oldest created)
+      const workspaceMember = workspaceMembers[0]
+
+      if (workspaceMembers.length > 1) {
+        console.log(`[Checkout] User has ${workspaceMembers.length} workspaces, using first:`, {
+          workspace_id: workspaceMember.workspace_id,
+          workspace_name: (workspaceMember.workspace as any)?.name,
+          total_workspaces: workspaceMembers.length
+        })
+      } else {
+        console.log('[Checkout] User workspace found:', workspaceMember.workspace_id)
+      }
 
       // Store customer ID with upsert to handle duplicates
       const { data: billingCustomerData, error: billingCustomerError } = await supabase

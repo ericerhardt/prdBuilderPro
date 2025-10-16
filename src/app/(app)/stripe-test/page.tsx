@@ -8,9 +8,17 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { CheckCircle, XCircle, AlertCircle, ExternalLink, Copy, Check } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
+interface StripeEnvVars {
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?: string
+  NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID?: string
+  NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID?: string
+  NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID?: string
+  NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PRICE_ID?: string
+}
+
 export default function StripeTestPage() {
   const { toast } = useToast()
-  const [envVars, setEnvVars] = useState<any>({})
+  const [envVars, setEnvVars] = useState<StripeEnvVars>({})
   const [copied, setCopied] = useState<string | null>(null)
 
   useEffect(() => {
@@ -35,7 +43,7 @@ export default function StripeTestPage() {
   }
 
   const isTestMode = envVars.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_test_')
-  const allPriceIdsSet = Object.values(envVars).every(v => v && v.length > 0)
+  const allPriceIdsSet = Object.values(envVars).every(v => v && typeof v === 'string' && v.length > 0)
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
