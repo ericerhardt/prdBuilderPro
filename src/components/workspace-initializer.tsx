@@ -7,10 +7,14 @@ import { useWorkspaceStore } from '@/store/workspace'
 export function WorkspaceInitializer() {
   const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore()
   const [initialized, setInitialized] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     // Don't re-initialize if already set
-    if (initialized || activeWorkspace) return
+    if (initialized || activeWorkspace) {
+      console.log('[WorkspaceInitializer] Already initialized or has workspace:', { initialized, hasWorkspace: !!activeWorkspace })
+      return
+    }
 
     const initializeWorkspace = async () => {
       try {
@@ -24,6 +28,8 @@ export function WorkspaceInitializer() {
           return
         }
 
+        console.log('[WorkspaceInitializer] Fetching workspaces for user:', user.id)
+
         // Fetch user's workspace memberships
         const { data: memberships, error } = await supabase
           .from('workspace_members')
@@ -33,11 +39,12 @@ export function WorkspaceInitializer() {
               id,
               name,
               created_at,
-              updated_at
+              created_by
             )
           `)
           .eq('user_id', user.id)
-          .order('created_at', { ascending: true })
+
+        console.log('[WorkspaceInitializer] Query result:', { memberships, error })
 
         if (error) {
           console.error('Error fetching workspaces:', error)

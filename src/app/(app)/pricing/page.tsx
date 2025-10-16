@@ -117,18 +117,38 @@ export default function PricingPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+        const errorData = await response.json()
+        console.error('[Pricing] Checkout error:', errorData)
+
+        // Show detailed error message
+        let errorMessage = errorData.message || 'Failed to create checkout session'
+
+        if (errorData.error === 'Invalid Price ID') {
+          errorMessage = 'Configuration error: Invalid Stripe Price IDs. Please contact support or check the console for details.'
+          console.error('[Pricing] Price ID Error:', {
+            received: errorData.receivedId,
+            expected: errorData.expectedFormat,
+            message: errorData.message
+          })
+        }
+
+        throw new Error(errorMessage)
       }
 
       const { url } = await response.json()
-      
+
+      if (!url) {
+        throw new Error('No checkout URL received from server')
+      }
+
+      console.log('[Pricing] Redirecting to checkout:', url)
       // Redirect to Stripe Checkout
       window.location.href = url
-    } catch (error) {
-      console.error('Error creating checkout session:', error)
+    } catch (error: any) {
+      console.error('[Pricing] Error creating checkout session:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to start checkout. Please try again.',
+        title: 'Checkout Error',
+        description: error.message || 'Failed to start checkout. Please try again.',
         variant: 'destructive',
       })
     } finally {

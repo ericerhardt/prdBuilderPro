@@ -23,6 +23,7 @@ function BillingContent() {
   const [loading, setLoading] = useState(true)
   const [workspaceLoading, setWorkspaceLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -70,22 +71,28 @@ function BillingContent() {
     if (!activeWorkspace) return
 
     try {
+      console.log('[Billing] Fetching subscription for workspace:', activeWorkspace.id)
+
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('workspace_id', activeWorkspace.id)
         .single()
 
+      console.log('[Billing] Subscription query result:', { data, error })
+
       if (error) {
         if (error.code !== 'PGRST116') { // Not found error
           throw error
         }
+        console.log('[Billing] No subscription found')
         setSubscription(null)
       } else {
+        console.log('[Billing] Subscription found:', data)
         setSubscription(data)
       }
     } catch (error) {
-      console.error('Error fetching subscription:', error)
+      console.error('[Billing] Error fetching subscription:', error)
       toast({
         title: 'Error',
         description: 'Failed to load subscription details.',
@@ -93,6 +100,43 @@ function BillingContent() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSyncSubscription = async () => {
+    setSyncing(true)
+
+    try {
+      console.log('[Billing] Syncing subscription from Stripe')
+
+      const response = await fetch('/api/billing/sync', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to sync subscription')
+      }
+
+      const result = await response.json()
+      console.log('[Billing] Sync result:', result)
+
+      toast({
+        title: 'Subscription synced!',
+        description: `Synced ${result.synced} subscription(s) from Stripe.`,
+      })
+
+      // Refresh subscription data
+      await fetchSubscription()
+    } catch (error: any) {
+      console.error('[Billing] Error syncing subscription:', error)
+      toast({
+        title: 'Sync failed',
+        description: error.message || 'Failed to sync subscription from Stripe.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -269,11 +313,26 @@ function BillingContent() {
             <p className="text-muted-foreground text-center mb-6 max-w-sm">
               You're currently on the free plan. Upgrade to unlock unlimited PRDs, team collaboration, and more!
             </p>
-            <Link href="/pricing">
-              <Button>
-                View Pricing Plans
+            <div className="flex gap-3">
+              <Link href="/pricing">
+                <Button>
+                  View Pricing Plans
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={handleSyncSubscription} disabled={syncing}>
+                {syncing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  'Sync from Stripe'
+                )}
               </Button>
-            </Link>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Just completed a payment? Click "Sync from Stripe" to refresh your subscription status.
+            </p>
           </CardContent>
         </Card>
       )}

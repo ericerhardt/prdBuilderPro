@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { WorkspaceInitializer } from '@/components/workspace-initializer'
+import { signOut } from './actions'
 
 export default async function AppLayout({
   children,
@@ -62,7 +63,7 @@ export default async function AppLayout({
                 Account
               </Button>
             </Link>
-            <form action="/api/auth/logout" method="POST">
+            <form action={signOut}>
               <Button variant="outline" size="sm" type="submit">
                 Sign out
               </Button>
