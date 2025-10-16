@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createServerSupabaseServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { z } from 'zod'
@@ -45,7 +45,10 @@ export async function POST(request: NextRequest) {
     // Get or create Stripe customer
     let stripeCustomerId: string | undefined
 
-    const { data: billingCustomer } = await supabase
+    // Use service client to bypass RLS for billing_customers operations
+    const supabaseAdmin = await createServerSupabaseServiceClient()
+
+    const { data: billingCustomer } = await supabaseAdmin
       .from('billing_customers')
       .select('stripe_customer_id')
       .eq('user_id', user.id)
@@ -68,13 +71,12 @@ export async function POST(request: NextRequest) {
       stripeCustomerId = customer.id
       console.log('[Checkout] Stripe customer created:', stripeCustomerId)
 
-      // Get user's workspace (use first workspace if user owns multiple)
+      // Get user's workspace (use first workspace if user is member of multiple)
       const { data: workspaceMembers, error: workspaceError } = await supabase
         .from('workspace_members')
         .select('workspace_id, workspace:workspaces(name)')
         .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .order('created_at', { ascending: true })
+        .limit(10)
 
       if (workspaceError) {
         console.error('[Checkout] Error fetching workspace:', workspaceError)
@@ -106,8 +108,8 @@ export async function POST(request: NextRequest) {
         console.log('[Checkout] User workspace found:', workspaceMember.workspace_id)
       }
 
-      // Store customer ID with upsert to handle duplicates
-      const { data: billingCustomerData, error: billingCustomerError } = await supabase
+      // Store customer ID with upsert to handle duplicates (use admin client to bypass RLS)
+      const { data: billingCustomerData, error: billingCustomerError } = await supabaseAdmin
         .from('billing_customers')
         .upsert({
           user_id: user.id,
