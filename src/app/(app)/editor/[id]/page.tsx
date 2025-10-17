@@ -304,8 +304,8 @@ export default function EditorPage({ params }: EditorPageProps) {
         {/* Editor/Preview */}
         <div className="lg:col-span-3">
           <Card>
-            <CardHeader>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <CardHeader>
                 <TabsList>
                   <TabsTrigger value="edit" disabled={!canEdit}>
                     <Edit className="mr-2 h-4 w-4" />
@@ -316,29 +316,29 @@ export default function EditorPage({ params }: EditorPageProps) {
                     Preview
                   </TabsTrigger>
                 </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent>
-              <TabsContent value="edit" className="mt-0">
-                {canEdit ? (
-                  <Textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="min-h-[600px] font-mono text-sm"
-                    placeholder="Enter your PRD content in Markdown..."
-                  />
-                ) : (
-                  <p className="text-muted-foreground">
-                    You don't have permission to edit this PRD.
-                  </p>
-                )}
-              </TabsContent>
-              <TabsContent value="preview" className="mt-0">
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{content}</ReactMarkdown>
-                </div>
-              </TabsContent>
-            </CardContent>
+              </CardHeader>
+              <CardContent>
+                <TabsContent value="edit" className="mt-0">
+                  {canEdit ? (
+                    <Textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      className="min-h-[600px] font-mono text-sm"
+                      placeholder="Enter your PRD content in Markdown..."
+                    />
+                  ) : (
+                    <p className="text-muted-foreground">
+                      You don't have permission to edit this PRD.
+                    </p>
+                  )}
+                </TabsContent>
+                <TabsContent value="preview" className="mt-0">
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown>{content}</ReactMarkdown>
+                  </div>
+                </TabsContent>
+              </CardContent>
+            </Tabs>
           </Card>
         </div>
       </div>
