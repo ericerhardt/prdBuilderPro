@@ -89,10 +89,10 @@ export default async function HomePage() {
               </p>
             </div>
             <div className="text-center">
-              <h3 className="text-xl font-semibold mb-4">Export to Claude</h3>
+              <h3 className="text-xl font-semibold mb-4">Export to Any Model</h3>
               <p className="text-muted-foreground">
-                Generate Claude-ready markdown with implementation tasks, ready to
-                paste into Claude Code.
+                Generate model-ready markdown with implementation tasks, ready to
+                paste into your favorite model.
               </p>
             </div>
           </div>
