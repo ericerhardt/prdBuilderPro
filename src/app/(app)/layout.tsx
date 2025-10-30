@@ -33,10 +33,16 @@ export default async function AppLayout({
             </Link>
             <div className="flex gap-6">
               <Link href="/builder" className="text-sm font-medium hover:text-primary">
-                Builder
+                PRD Builder
               </Link>
               <Link href="/library" className="text-sm font-medium hover:text-primary">
-                Library
+                PRD Library
+              </Link>
+              <Link href="/ai-builder" className="text-sm font-medium hover:text-primary">
+                AI Builder
+              </Link>
+              <Link href="/ai-instructions" className="text-sm font-medium hover:text-primary">
+                AI Library
               </Link>
               <Link href="/pricing" className="text-sm font-medium hover:text-primary">
                 Pricing

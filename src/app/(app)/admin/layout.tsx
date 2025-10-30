@@ -38,7 +38,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <TabsTrigger value="prds">PRD Library</TabsTrigger>
           </Link>
           <Link href="/admin/platforms">
-            <TabsTrigger value="platforms">Platform Config</TabsTrigger>
+            <TabsTrigger value="platforms">PRD Platforms</TabsTrigger>
+          </Link>
+          <Link href="/admin/ai-platforms">
+            <TabsTrigger value="ai-platforms">AI Platforms</TabsTrigger>
           </Link>
         </TabsList>
       </Tabs>
