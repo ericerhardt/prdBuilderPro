@@ -54,7 +54,33 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Protect admin routes - only app-level admins can access
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (!user) {
+      // Not authenticated - redirect to login
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/login'
+      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Check if user is app admin
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_app_admin')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!profile || !profile.is_app_admin) {
+      // Not an app admin - redirect to builder with error
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/builder'
+      redirectUrl.searchParams.set('error', 'unauthorized')
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
 
   return response
 }

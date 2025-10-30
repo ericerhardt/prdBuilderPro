@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { WorkspaceInitializer } from '@/components/workspace-initializer'
+import { isAppAdmin } from '@/lib/auth/admin'
 import { signOut } from './actions'
 
 export default async function AppLayout({
@@ -17,15 +18,8 @@ export default async function AppLayout({
     redirect('/login')
   }
 
-  // Check if user has admin access
-  const { data: workspaceMemberships } = await supabase
-    .from('workspace_members')
-    .select('role')
-    .eq('user_id', user.id)
-
-  const isAdmin = workspaceMemberships?.some(
-    (membership) => membership.role === 'owner' || membership.role === 'admin'
-  )
+  // Check if user is an app-level admin (not workspace admin)
+  const isAdmin = await isAppAdmin()
 
   return (
     <div className="min-h-screen flex flex-col">

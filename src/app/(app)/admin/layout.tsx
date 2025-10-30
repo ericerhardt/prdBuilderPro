@@ -1,67 +1,17 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { useWorkspaceStore } from '@/store/workspace'
-import { createClient } from '@/lib/supabase/client'
-import { Loader2, Shield } from 'lucide-react'
+import { isAppAdmin } from '@/lib/auth/admin'
+import { Shield } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-  const { activeWorkspace, userRole } = useWorkspaceStore()
-  const [loading, setLoading] = useState(true)
-  const [authorized, setAuthorized] = useState(false)
-  const supabase = createClient()
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Server-side check for app-level admin access
+  const isAdmin = await isAppAdmin()
 
-  useEffect(() => {
-    checkAuthorization()
-  }, [activeWorkspace, userRole])
-
-  const checkAuthorization = async () => {
-    if (!activeWorkspace) {
-      router.push('/builder')
-      return
-    }
-
-    // Check if user has admin or owner role
-    if (userRole !== 'owner' && userRole !== 'admin') {
-      // Double check from database
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      const { data: member } = await supabase
-        .from('workspace_members')
-        .select('role')
-        .eq('workspace_id', activeWorkspace.id)
-        .eq('user_id', user.id)
-        .single()
-
-      if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
-        router.push('/builder')
-        return
-      }
-    }
-
-    setAuthorized(true)
-    setLoading(false)
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
-
-  if (!authorized) {
-    return null
+  if (!isAdmin) {
+    // This should rarely happen since middleware also protects,
+    // but it's a defense-in-depth measure
+    redirect('/builder?error=unauthorized')
   }
 
   return (
@@ -69,10 +19,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="h-6 w-6 text-primary" />
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold">Application Admin Dashboard</h1>
         </div>
         <p className="text-muted-foreground">
-          Manage your workspace, users, and analytics
+          Manage application-wide settings, billing analytics, and platform configuration
         </p>
       </div>
 
