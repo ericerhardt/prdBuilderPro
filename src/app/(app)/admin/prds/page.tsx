@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { useWorkspaceStore } from '@/store/workspace'
-import { PRDDocument } from '@/types/prd'
+import { useToast } from '@/components/ui/use-toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -16,42 +14,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useToast } from '@/components/ui/use-toast'
 import { Loader2, Search, FileText, Trash2, Eye } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
+type PRDWithWorkspace = {
+  id: string
+  workspace_id: string
+  platform: string
+  title: string
+  body_markdown: string
+  params: any
+  version: number
+  created_by: string
+  created_at: string
+  updated_at: string
+  workspaces: {
+    id: string
+    name: string
+  }
+}
+
 export default function AdminPRDsPage() {
-  const { activeWorkspace } = useWorkspaceStore()
   const { toast } = useToast()
-  const [prds, setPRDs] = useState<PRDDocument[]>([])
-  const [filteredPRDs, setFilteredPRDs] = useState<PRDDocument[]>([])
+  const [prds, setPRDs] = useState<PRDWithWorkspace[]>([])
+  const [filteredPRDs, setFilteredPRDs] = useState<PRDWithWorkspace[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [platformFilter, setPlatformFilter] = useState('all')
   const [sortBy, setSortBy] = useState<'updated' | 'created' | 'title'>('updated')
-  const supabase = createClient()
 
   useEffect(() => {
-    if (activeWorkspace) {
-      fetchPRDs()
-    }
-  }, [activeWorkspace])
+    fetchPRDs()
+  }, [])
 
   useEffect(() => {
     filterAndSortPRDs()
   }, [searchQuery, platformFilter, sortBy, prds])
 
   const fetchPRDs = async () => {
-    if (!activeWorkspace) return
-
     try {
-      const { data, error } = await supabase
-        .from('prd_documents')
-        .select('*')
-        .eq('workspace_id', activeWorkspace.id)
-        .order('updated_at', { ascending: false })
+      const response = await fetch('/api/admin/prds')
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PRDs: ${response.statusText}`)
+      }
+
+      const data = await response.json()
       setPRDs(data || [])
     } catch (error) {
       console.error('Error fetching PRDs:', error)
@@ -79,7 +87,8 @@ export default function AdminPRDsPage() {
       filtered = filtered.filter(prd =>
         prd.title.toLowerCase().includes(query) ||
         prd.platform.toLowerCase().includes(query) ||
-        prd.created_by.toLowerCase().includes(query)
+        prd.created_by.toLowerCase().includes(query) ||
+        prd.workspaces?.name?.toLowerCase().includes(query)
       )
     }
 
@@ -105,12 +114,13 @@ export default function AdminPRDsPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from('prd_documents')
-        .delete()
-        .eq('id', prdId)
+      const response = await fetch(`/api/admin/prds?id=${prdId}`, {
+        method: 'DELETE',
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error('Failed to delete PRD')
+      }
 
       toast({
         title: 'PRD deleted',
@@ -166,7 +176,7 @@ export default function AdminPRDsPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by title, platform, or author..."
+            placeholder="Search by title, platform, workspace, or author..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -266,6 +276,7 @@ export default function AdminPRDsPage() {
                       <Badge variant="outline">v{prd.version}</Badge>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>Workspace: {prd.workspaces?.name || 'Unknown'}</span>
                       <span>Created by: {prd.created_by.substring(0, 8)}...</span>
                       <span>Updated {formatDistanceToNow(new Date(prd.updated_at), { addSuffix: true })}</span>
                     </div>
