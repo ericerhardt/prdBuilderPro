@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   description: 'AI-powered PRD generator that creates platform-specific product requirements documents for Replit, Bolt.new, Leap.new, and Lovable',
 }
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 export default function RootLayout({
   children,
 }: {
