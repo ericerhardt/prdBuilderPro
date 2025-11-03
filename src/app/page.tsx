@@ -82,6 +82,21 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Video Section */}
+      <section className="py-12 px-4 bg-secondary/20">
+        <div className="container mx-auto max-w-md">
+          <div className="relative w-full pb-[177.78%] overflow-hidden rounded-lg shadow-xl border">
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src="https://app.heygen.com/embedded-player/e5b5a3601d7a4e4caea3972a04e9a75d"
+              title="HeyGen video player"
+              allow="encrypted-media; fullscreen;"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Two Products Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-6xl">
